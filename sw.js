@@ -1,4 +1,4 @@
-const CACHE_NAME = "drop-tool-cache-v2";
+const CACHE_NAME = "drop-tool-cache-v3";
 
 
 const ASSETS = [
