@@ -85,10 +85,10 @@
       </div>
     </div>
     <!-- ドロップ率変更モーダル -->
-<div id="rateModal" class="modal hidden">
-  <div class="modal-content">
+<div id="rateModal" class="modal hidden" role="dialog" aria-modal="true">
+  <div class="modal-card">
     <h2>ドロップ率変更</h2>
-    <p>この項目のドロップ率を選択してください。</p>
+    <p class="modal-desc">この項目のドロップ率を選択してください。</p>
 
     <select id="rateModalSelect" class="select" style="width:100%">
       <option value="8">1/8</option>
@@ -100,12 +100,13 @@
       <option value="4096">1/4096</option>
     </select>
 
-    <div class="modal-buttons">
-      <button id="rateModalCancel" class="btn">閉じる</button>
-      <button id="rateModalOk" class="btn primary">変更</button>
+    <div class="modal-actions">
+      <button id="rateModalCancel" class="btn" type="button">閉じる</button>
+      <button id="rateModalOk" class="btn primary" type="button">変更</button>
     </div>
   </div>
 </div>
+
   </main>
 
   <script src="./script.js"></script>
