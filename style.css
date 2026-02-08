@@ -287,4 +287,18 @@ tbody td{
 .table .badge:active {
   transform: translateY(1px);
 }
+/* ===== モーダルを最前面にする（stickyヘッダより上） ===== */
+.modal {
+  z-index: 10000;
+}
+
+.modal-card {
+  position: relative;
+  z-index: 10001;
+}
+
+/* 念のため：テーブルヘッダーのz-indexを下げる */
+thead th {
+  z-index: 1;
+}
 
