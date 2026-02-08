@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>ドロップ率計算ツール</title>
+
+  <link rel="manifest" href="./manifest.json" />
+  <meta name="theme-color" content="#0f766e" />
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <header class="app-header">
+    <h1>ドロップ率計算ツール</h1>
+    <p class="subtitle">n回引いて、1回以上当たる確率を表示</p>
+  </header>
+
+  <main class="app">
+    <section class="card form-card" aria-label="登録フォーム">
+      <div class="row">
+        <label class="label" for="itemName">名前</label>
+        <input id="itemName" class="input" type="text" placeholder="例: レアドロップA" maxlength="60" />
+      </div>
+
+      <div class="row">
+        <label class="label" for="rateSelect">ドロップ率</label>
+        <select id="rateSelect" class="select">
+          <option value="" selected>選択してください</option>
+          <option value="8">1/8</option>
+          <option value="16">1/16</option>
+          <option value="32">1/32</option>
+          <option value="64">1/64</option>
+          <option value="128">1/128</option>
+          <option value="256">1/256</option>
+          <option value="4096">1/4096</option>
+        </select>
+      </div>
+
+      <div class="row actions">
+        <button id="addBtn" class="btn primary" type="button">登録</button>
+        <button id="exportBtn" class="btn" type="button">バックアップ</button>
+        <button id="importBtn" class="btn" type="button">復元</button>
+      </div>
+
+      <div id="msg" class="msg" role="status" aria-live="polite"></div>
+    </section>
+
+    <section class="card table-card" aria-label="一覧">
+      <div class="table-header">
+        <div class="sorts">
+          <button id="sortNameBtn" class="btn small" type="button">名前順</button>
+          <button id="sortRateBtn" class="btn small" type="button">ドロップ率順</button>
+        </div>
+        <div class="hint">※ボタン押下で昇順/降順切替</div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="table" id="itemsTable">
+          <thead>
+            <tr>
+              <th class="col-name">名前</th>
+              <th class="col-rate">率</th>
+              <th class="col-count">回数</th>
+              <th class="col-prob">1回以上</th>
+              <th class="col-ops">操作</th>
+            </tr>
+          </thead>
+          <tbody id="itemsBody">
+            <!-- JSで描画 -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- バックアップ/復元用モーダル -->
+    <div id="modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal-card">
+        <h2 id="modalTitle">バックアップ / 復元</h2>
+        <p class="modal-desc" id="modalDesc"></p>
+        <textarea id="modalText" class="textarea" spellcheck="false"></textarea>
+        <div class="modal-actions">
+          <button id="modalCancel" class="btn" type="button">閉じる</button>
+          <button id="modalOk" class="btn primary" type="button">OK</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="./script.js"></script>
+</body>
+</html>
