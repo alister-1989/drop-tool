@@ -3,6 +3,7 @@
 
   const $ = (id) => document.getElementById(id);
 
+  // --- Form ---
   const nameInput = $("itemName");
   const rateSelect = $("rateSelect");
   const addBtn = $("addBtn");
@@ -10,25 +11,37 @@
   const importBtn = $("importBtn");
   const msg = $("msg");
 
+  // --- Sort ---
   const sortNameBtn = $("sortNameBtn");
   const sortRateBtn = $("sortRateBtn");
 
+  // --- Table ---
   const tbody = $("itemsBody");
 
+  // --- Backup/Restore modal ---
   const modal = $("modal");
   const modalDesc = $("modalDesc");
   const modalText = $("modalText");
   const modalCancel = $("modalCancel");
   const modalOk = $("modalOk");
 
-  // 変更可能なドロップ率候補（分母）
+  // --- Rate change modal (must exist in index.html) ---
+  const rateModal = document.getElementById("rateModal");
+  const rateModalSelect = document.getElementById("rateModalSelect");
+  const rateModalCancel = document.getElementById("rateModalCancel");
+  const rateModalOk = document.getElementById("rateModalOk");
+
+  // Allowed denoms
   const RATE_DENOMS = [8, 16, 32, 64, 128, 256, 4096];
 
   let items = loadItems();
   let sortNameAsc = true;
   let sortRateAsc = true;
 
-  // --- Service Worker 登録（HTTPSでのみ有効）---
+  // for rate modal
+  let currentRateItemId = null;
+
+  // --- Service Worker register (HTTPS only) ---
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("./sw.js").catch(() => {});
   }
@@ -36,7 +49,11 @@
   function showMsg(text, isError = true) {
     msg.textContent = text || "";
     msg.style.color = isError ? "var(--danger)" : "var(--primary)";
-    if (text) setTimeout(() => { if (msg.textContent === text) msg.textContent = ""; }, 4000);
+    if (text) {
+      setTimeout(() => {
+        if (msg.textContent === text) msg.textContent = "";
+      }, 4000);
+    }
   }
 
   function loadItems() {
@@ -45,14 +62,17 @@
       if (!raw) return [];
       const parsed = JSON.parse(raw);
       if (!Array.isArray(parsed)) return [];
-      return parsed.map(x => ({
-        id: String(x.id || cryptoRandomId()),
-        name: String(x.name || ""),
-        denom: Number(x.denom || 0),
-        count: Number(x.count || 0),
-        dropped: Boolean(x.dropped || false),
-        createdAt: Number(x.createdAt || Date.now())
-      })).filter(x => x.name && x.denom > 0);
+
+      return parsed
+        .map((x) => ({
+          id: String(x.id || cryptoRandomId()),
+          name: String(x.name || ""),
+          denom: Number(x.denom || 0),
+          count: Number(x.count || 0),
+          dropped: Boolean(x.dropped || false),
+          createdAt: Number(x.createdAt || Date.now()),
+        }))
+        .filter((x) => x.name && x.denom > 0);
     } catch {
       return [];
     }
@@ -70,6 +90,7 @@
     return `1/${denom}`;
   }
 
+  // B: n回引いて1回以上当たる確率
   function probAtLeastOncePercent(denom, n) {
     const p = 1 / denom;
     const prob = 1 - Math.pow(1 - p, n);
@@ -84,57 +105,52 @@
     return x.toFixed(2) + "%";
   }
 
-  // 入力例: "64" / "1/64" / " 1 / 64 "
-  function parseDenomInput(input) {
-    const s = (input || "").trim();
-    if (!s) return null;
-
-    // "1/64" 形式
-    if (s.includes("/")) {
-      const parts = s.split("/").map(p => p.trim());
-      if (parts.length !== 2) return null;
-      if (parts[0] !== "1") return null;
-      const d = Number(parts[1]);
-      if (!Number.isInteger(d) || d <= 0) return null;
-      return d;
-    }
-
-    // "64" 形式
-    const d = Number(s);
-    if (!Number.isInteger(d) || d <= 0) return null;
-    return d;
-  }
-
-  function isAllowedDenom(d) {
-    return RATE_DENOMS.includes(d);
-  }
-
-  function promptChangeRate(item) {
-    const current = item.denom;
-    const choices = RATE_DENOMS.map(d => `1/${d}`).join(", ");
-    const input = prompt(
-      `この項目のドロップ率を変更します。\n\n現在: 1/${current}\n選択肢: ${choices}\n\n入力例: 64 または 1/64`,
-      `1/${current}`
-    );
-
-    if (input === null) return; // キャンセル
-
-    const denom = parseDenomInput(input);
-    if (denom === null) {
-      showMsg("入力形式が正しくありません。例: 64 または 1/64");
+  // --- Rate modal helpers ---
+  function openRateModal(item) {
+    if (!rateModal || !rateModalSelect || !rateModalCancel || !rateModalOk) {
+      showMsg("rateModal が見つかりません。index.html に率変更モーダルを追加してください。");
       return;
     }
-    if (!isAllowedDenom(denom)) {
-      showMsg(`許可されていない分母です。選択肢: ${RATE_DENOMS.join(", ")}`);
-      return;
-    }
-
-    item.denom = denom; // count / dropped はそのまま
-    saveItems();
-    render();
-    showMsg(`ドロップ率を 1/${denom} に変更しました。`, false);
+    currentRateItemId = item.id;
+    rateModalSelect.value = String(item.denom);
+    rateModal.classList.remove("hidden");
   }
 
+  function closeRateModal() {
+    if (!rateModal) return;
+    rateModal.classList.add("hidden");
+    currentRateItemId = null;
+  }
+
+  if (rateModalCancel) {
+    rateModalCancel.addEventListener("click", closeRateModal);
+  }
+
+  if (rateModalOk) {
+    rateModalOk.addEventListener("click", () => {
+      if (!currentRateItemId) return;
+
+      const item = items.find((x) => x.id === currentRateItemId);
+      if (!item) {
+        closeRateModal();
+        return;
+      }
+
+      const denom = Number(rateModalSelect.value);
+      if (!RATE_DENOMS.includes(denom)) {
+        showMsg("不正なドロップ率です。");
+        return;
+      }
+
+      item.denom = denom; // count/dropped は保持
+      saveItems();
+      render();
+      closeRateModal();
+      showMsg(`ドロップ率を 1/${denom} に変更しました。`, false);
+    });
+  }
+
+  // --- render ---
   function render() {
     tbody.innerHTML = "";
 
@@ -159,7 +175,7 @@
       tdName.textContent = item.name;
       tr.appendChild(tdName);
 
-      // rate (クリックで変更)
+      // rate (clickable)
       const tdRate = document.createElement("td");
       const rateBtn = document.createElement("button");
       rateBtn.type = "button";
@@ -167,9 +183,9 @@
       rateBtn.style.border = "1px solid var(--border)";
       rateBtn.style.cursor = "pointer";
       rateBtn.style.background = "#eef2ff";
-      rateBtn.title = "タップしてドロップ率を変更";
+      rateBtn.title = "クリックしてドロップ率を変更";
       rateBtn.textContent = formatRate(item.denom);
-      rateBtn.addEventListener("click", () => openRateSelectModal(item));
+      rateBtn.addEventListener("click", () => openRateModal(item));
       tdRate.appendChild(rateBtn);
       tr.appendChild(tdRate);
 
@@ -220,7 +236,7 @@
       delBtn.textContent = "削除";
       delBtn.addEventListener("click", () => {
         if (!confirm("この項目を削除してもよろしいですか？")) return;
-        items = items.filter(x => x.id !== item.id);
+        items = items.filter((x) => x.id !== item.id);
         saveItems();
         render();
       });
@@ -233,6 +249,7 @@
     }
   }
 
+  // --- add item ---
   function addItem() {
     const name = (nameInput.value || "").trim();
     const denom = Number(rateSelect.value || 0);
@@ -252,7 +269,7 @@
       denom,
       count: 0,
       dropped: false,
-      createdAt: Date.now()
+      createdAt: Date.now(),
     };
 
     items.push(newItem);
@@ -264,6 +281,7 @@
     showMsg("登録しました。", false);
   }
 
+  // --- sort ---
   function sortByName() {
     items.sort((a, b) => {
       const cmp = a.name.localeCompare(b.name, "ja");
@@ -284,6 +302,7 @@
     render();
   }
 
+  // --- backup/restore modal ---
   function openModal(mode) {
     modal.classList.remove("hidden");
     modalText.value = "";
@@ -307,50 +326,6 @@
     modalText.value = "";
   }
 
-function openRateSelectModal(item) {
-  modal.classList.remove("hidden");
-
-  modalDesc.textContent = "この項目のドロップ率を変更してください。";
-  modalText.style.display = "none"; // textareaは使わない
-
-  // 既存selectを動的に作る
-  const select = document.createElement("select");
-  select.className = "select";
-  select.style.width = "100%";
-  select.style.marginTop = "8px";
-
-  RATE_DENOMS.forEach(d => {
-    const opt = document.createElement("option");
-    opt.value = d;
-    opt.textContent = `1/${d}`;
-    if (d === item.denom) opt.selected = true;
-    select.appendChild(opt);
-  });
-
-  // textareaの代わりに差し込む
-  modalText.parentNode.insertBefore(select, modalText.nextSibling);
-
-  modalOk.textContent = "変更";
-  modalOk.onclick = () => {
-    item.denom = Number(select.value);
-    saveItems();
-    render();
-    closeRateSelectModal(select);
-    showMsg(`ドロップ率を 1/${item.denom} に変更しました。`, false);
-  };
-
-  modalCancel.onclick = () => {
-    closeRateSelectModal(select);
-  };
-}
-
-function closeRateSelectModal(select) {
-  modal.classList.add("hidden");
-  modalText.style.display = "";
-  select.remove();
-}
-
-
   function doModalOk() {
     const mode = modalOk.dataset.mode;
 
@@ -371,14 +346,16 @@ function closeRateSelectModal(select) {
       const imported = parsed.items;
       if (!Array.isArray(imported)) throw new Error("itemsがありません");
 
-      const normalized = imported.map(x => ({
-        id: String(x.id || cryptoRandomId()),
-        name: String(x.name || ""),
-        denom: Number(x.denom || 0),
-        count: Number(x.count || 0),
-        dropped: Boolean(x.dropped || false),
-        createdAt: Number(x.createdAt || Date.now())
-      })).filter(x => x.name && x.denom > 0);
+      const normalized = imported
+        .map((x) => ({
+          id: String(x.id || cryptoRandomId()),
+          name: String(x.name || ""),
+          denom: Number(x.denom || 0),
+          count: Number(x.count || 0),
+          dropped: Boolean(x.dropped || false),
+          createdAt: Number(x.createdAt || Date.now()),
+        }))
+        .filter((x) => x.name && x.denom > 0);
 
       if (normalized.length === 0) {
         showMsg("復元データに有効な項目がありません。");
@@ -395,7 +372,7 @@ function closeRateSelectModal(select) {
     }
   }
 
-  // events
+  // --- events ---
   addBtn.addEventListener("click", addItem);
   sortNameBtn.addEventListener("click", sortByName);
   sortRateBtn.addEventListener("click", sortByRate);
@@ -405,6 +382,7 @@ function closeRateSelectModal(select) {
   modalCancel.addEventListener("click", closeModal);
   modalOk.addEventListener("click", doModalOk);
 
+  // Enter key => add
   nameInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
@@ -412,5 +390,6 @@ function closeRateSelectModal(select) {
     }
   });
 
+  // initial
   render();
 })();

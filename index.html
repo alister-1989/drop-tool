@@ -84,6 +84,28 @@
         </div>
       </div>
     </div>
+    <!-- ドロップ率変更モーダル -->
+<div id="rateModal" class="modal hidden">
+  <div class="modal-content">
+    <h2>ドロップ率変更</h2>
+    <p>この項目のドロップ率を選択してください。</p>
+
+    <select id="rateModalSelect" class="select" style="width:100%">
+      <option value="8">1/8</option>
+      <option value="16">1/16</option>
+      <option value="32">1/32</option>
+      <option value="64">1/64</option>
+      <option value="128">1/128</option>
+      <option value="256">1/256</option>
+      <option value="4096">1/4096</option>
+    </select>
+
+    <div class="modal-buttons">
+      <button id="rateModalCancel" class="btn">閉じる</button>
+      <button id="rateModalOk" class="btn primary">変更</button>
+    </div>
+  </div>
+</div>
   </main>
 
   <script src="./script.js"></script>
