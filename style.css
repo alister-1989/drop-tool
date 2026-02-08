@@ -238,3 +238,53 @@ tbody td{
   margin-top:10px;
   flex-wrap:wrap;
 }
+/* ===== 率変更モーダルの安定化（GitHub Pages / iPhone含む） ===== */
+
+/* モーダルの中身（modal-card）の最大幅や配置は既存に任せつつ、
+   select が「見えない」「開かない」状態を避けるための保険。 */
+
+.modal-card {
+  position: relative;
+}
+
+/* select を確実に前面に出す（他要素に隠れないように） */
+#rateModalSelect {
+  display: block;
+  width: 100%;
+  min-height: 44px;        /* iOSで押しやすい高さ */
+  font-size: 16px;         /* iOSのズーム防止 */
+  line-height: 1.2;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--text);
+  -webkit-appearance: menulist; /* iOS Safari 対策 */
+  appearance: auto;
+  position: relative;
+  z-index: 9999;
+}
+
+/* モーダルの中で select が押せない原因の典型が
+   「親が pointer-events:none / overflow 隠し」などなので保険 */
+#rateModal,
+#rateModal * {
+  pointer-events: auto;
+}
+
+/* もしモーダル内が狭くて select が隠れる場合に備え、
+   モーダルカード内のスクロールを許可 */
+#rateModal .modal-card {
+  max-height: 80vh;
+  overflow: auto;
+}
+
+/* 率バッジ（表の 1/64 ボタン）のクリック感を少し強める */
+.table .badge {
+  border: 1px solid var(--border);
+  cursor: pointer;
+}
+.table .badge:active {
+  transform: translateY(1px);
+}
+
