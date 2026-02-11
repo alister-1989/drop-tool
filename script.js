@@ -258,14 +258,19 @@
 
       // drop prob
       const tdDropProb = document.createElement("td");
-      tdDropProb.textContent = formatPercent(probAtLeastOncePercent(item.dropDenom, item.count));
+      const nDrop = item.dropDone ? (item.dropAt ?? item.count) : item.count;
+      tdDropProb.textContent = formatPercent(probAtLeastOncePercent(item.dropDenom, nDrop));
+
       tr.appendChild(tdDropProb);
 
       // rare prob
       const tdRareProb = document.createElement("td");
-      tdRareProb.textContent = item.rareDenom > 0
-        ? formatPercent(probAtLeastOncePercent(item.rareDenom, item.count))
-        : "-";
+      if (item.rareDenom > 0) {
+  const nRare = item.rareDone ? (item.rareAt ?? item.count) : item.count;
+  tdRareProb.textContent = formatPercent(probAtLeastOncePercent(item.rareDenom, nRare));
+} else {
+  tdRareProb.textContent = "-";
+}
       tr.appendChild(tdRareProb);
 
       // ops
