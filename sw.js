@@ -1,5 +1,4 @@
-const CACHE_NAME = "drop-tool-cache-v3";
-
+const CACHE_NAME = "drop-tool-cache-v4";
 
 const ASSETS = [
   "./",
@@ -7,14 +6,13 @@ const ASSETS = [
   "./style.css",
   "./script.js",
   "./manifest.json",
+  "./sw.js",
   "./icons/icon-192x192.png",
   "./icons/icon-512x512.png"
 ];
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
-  );
+  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS)));
   self.skipWaiting();
 });
 

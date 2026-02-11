@@ -12,7 +12,7 @@
 <body>
   <header class="app-header">
     <h1>ドロップ率計算ツール</h1>
-    <p class="subtitle">n回引いて、1回以上当たる確率を表示</p>
+    <p class="subtitle">n回引いて、1回以上当たる確率（ドロップ/レア）を表示</p>
   </header>
 
   <main class="app">
@@ -23,8 +23,22 @@
       </div>
 
       <div class="row">
-        <label class="label" for="rateSelect">ドロップ率</label>
-        <select id="rateSelect" class="select">
+        <label class="label" for="dropRateSelect">ドロップ率</label>
+        <select id="dropRateSelect" class="select">
+          <option value="" selected>選択してください</option>
+          <option value="8">1/8</option>
+          <option value="16">1/16</option>
+          <option value="32">1/32</option>
+          <option value="64">1/64</option>
+          <option value="128">1/128</option>
+          <option value="256">1/256</option>
+          <option value="4096">1/4096</option>
+        </select>
+      </div>
+
+      <div class="row">
+        <label class="label" for="rareRateSelect">レア率</label>
+        <select id="rareRateSelect" class="select">
           <option value="" selected>選択してください</option>
           <option value="8">1/8</option>
           <option value="16">1/16</option>
@@ -49,7 +63,8 @@
       <div class="table-header">
         <div class="sorts">
           <button id="sortNameBtn" class="btn small" type="button">名前順</button>
-          <button id="sortRateBtn" class="btn small" type="button">ドロップ率順</button>
+          <button id="sortDropRateBtn" class="btn small" type="button">ドロップ率順</button>
+          <button id="sortRareRateBtn" class="btn small" type="button">レア率順</button>
         </div>
         <div class="hint">※ボタン押下で昇順/降順切替</div>
       </div>
@@ -59,15 +74,15 @@
           <thead>
             <tr>
               <th class="col-name">名前</th>
-              <th class="col-rate">率</th>
+              <th class="col-rate">ドロップ率</th>
+              <th class="col-rate">レア率</th>
               <th class="col-count">回数</th>
-              <th class="col-prob">1回以上</th>
+              <th class="col-prob">ドロップ</th>
+              <th class="col-prob">レア</th>
               <th class="col-ops">操作</th>
             </tr>
           </thead>
-          <tbody id="itemsBody">
-            <!-- JSで描画 -->
-          </tbody>
+          <tbody id="itemsBody"></tbody>
         </table>
       </div>
     </section>
@@ -84,29 +99,29 @@
         </div>
       </div>
     </div>
-    <!-- ドロップ率変更モーダル -->
-<div id="rateModal" class="modal hidden" role="dialog" aria-modal="true">
-  <div class="modal-card">
-    <h2>ドロップ率変更</h2>
-    <p class="modal-desc">この項目のドロップ率を選択してください。</p>
 
-    <select id="rateModalSelect" class="select" style="width:100%">
-      <option value="8">1/8</option>
-      <option value="16">1/16</option>
-      <option value="32">1/32</option>
-      <option value="64">1/64</option>
-      <option value="128">1/128</option>
-      <option value="256">1/256</option>
-      <option value="4096">1/4096</option>
-    </select>
+    <!-- 率変更モーダル（ドロップ/レア共通） -->
+    <div id="rateModal" class="modal hidden" role="dialog" aria-modal="true">
+      <div class="modal-card">
+        <h2 id="rateModalTitle">率変更</h2>
+        <p class="modal-desc" id="rateModalDesc">変更する率を選択してください。</p>
 
-    <div class="modal-actions">
-      <button id="rateModalCancel" class="btn" type="button">閉じる</button>
-      <button id="rateModalOk" class="btn primary" type="button">変更</button>
+        <select id="rateModalSelect" class="select" style="width:100%">
+          <option value="8">1/8</option>
+          <option value="16">1/16</option>
+          <option value="32">1/32</option>
+          <option value="64">1/64</option>
+          <option value="128">1/128</option>
+          <option value="256">1/256</option>
+          <option value="4096">1/4096</option>
+        </select>
+
+        <div class="modal-actions">
+          <button id="rateModalCancel" class="btn" type="button">閉じる</button>
+          <button id="rateModalOk" class="btn primary" type="button">変更</button>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
-
   </main>
 
   <script src="./script.js"></script>
